@@ -1,65 +1,102 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import PageLayout from '@/components/PageLayout';
+import AIStatusBadge from '@/components/AIStatusBadge';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { fetchExamInfo, fetchAIStatus, startExam, AIStatus } from '@/lib/api';
+import { setExamState, clearExamState } from '@/lib/store';
+
+export default function HomePage() {
+  const router = useRouter();
+  const [topics, setTopics] = useState<string[]>([]);
+  const [aiStatus, setAiStatus] = useState<AIStatus | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [starting, setStarting] = useState(false);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [examInfo, status] = await Promise.all([
+        fetchExamInfo(),
+        fetchAIStatus(),
+      ]);
+      setTopics(examInfo.topics);
+      setAiStatus(status);
+    } catch (err) {
+      console.error('Error loading data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStartExam = async (topic?: string) => {
+    setStarting(true);
+    try {
+      clearExamState();
+      const questions = await startExam(topic);
+      setExamState({
+        questions,
+        answers: questions.map((q) => ({ questionId: q.id, answer: '', confidence: 0 })),
+        topic: topic || null,
+        round: 1,
+        lastResult: null,
+      });
+      router.push('/exam');
+    } catch (err) {
+      console.error('Error starting exam:', err);
+      setStarting(false);
+    }
+  };
+
+  if (loading) return <LoadingSpinner />;
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <PageLayout title="ระบบสอบ Adaptive">
+      <AIStatusBadge status={aiStatus} />
+
+      <div className="space-y-6">
+        <h2 className="text-xl font-bold pb-3 border-b border-primary/20 text-primary">
+          เลือกหัวข้อข้อสอบ
+        </h2>
+
+        <div className="grid gap-4">
+          {topics.map((topic) => (
+            <button
+              key={topic}
+              onClick={() => handleStartExam(topic)}
+              disabled={starting}
+              className="w-full p-5 text-left rounded-xl border border-primary/20 transition-all hover:shadow-md hover:border-primary hover:bg-primary hover:text-light
+                         disabled:opacity-50 disabled:cursor-not-allowed bg-white text-dark group"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-lg">{topic}</span>
+                <span className="transform transition-transform group-hover:translate-x-1">→</span>
+              </div>
+            </button>
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+        <button
+          onClick={() => handleStartExam()}
+          disabled={starting}
+          className="w-full py-4 rounded-xl font-bold text-lg shadow-md transition-all
+                     disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:-translate-y-0.5 bg-accent text-dark"
+        >
+          {starting ? 'กำลังโหลด...' : 'สุ่มทุกหัวข้อ'}
+        </button>
+
+        <a
+          href="/history"
+          className="block w-full text-center py-3 rounded-xl border-2 transition-all font-semibold hover:bg-primary hover:text-light border-primary text-primary"
+        >
+          ดูประวัติการสอบ
+        </a>
+      </div>
+    </PageLayout>
   );
 }
