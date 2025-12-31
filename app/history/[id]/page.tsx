@@ -74,7 +74,7 @@ export default function HistoryDetailPage({ params }: { params: Promise<{ id: st
             {result.summary && (
                 <div className="mb-6 p-6 rounded-xl border-l-4 border-accent bg-white shadow-sm">
                     <h3 className="font-bold mb-3 text-primary text-lg flex items-center gap-2">
-                        📊 สรุปผลการวิเคราะห์
+                        สรุปผลการวิเคราะห์
                     </h3>
                     <p className="text-dark leading-relaxed">{result.summary}</p>
                 </div>
@@ -84,7 +84,7 @@ export default function HistoryDetailPage({ params }: { params: Promise<{ id: st
             {result.nextSteps && result.nextSteps.length > 0 && (
                 <div className="mb-8 p-6 rounded-xl bg-gradient-to-br from-white to-orange-50 border border-orange-100 shadow-sm">
                     <h3 className="font-bold mb-4 text-primary text-lg flex items-center gap-2">
-                        🚀 สิ่งที่ควรทำต่อ
+                        สิ่งที่ควรทำต่อ
                     </h3>
                     <ul className="space-y-3">
                         {result.nextSteps.map((step, i) => (
