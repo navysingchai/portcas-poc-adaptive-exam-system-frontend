@@ -64,13 +64,13 @@ export interface AdaptiveResponse {
 // --- API FUNCTIONS ---
 
 export async function fetchAIStatus(): Promise<AIStatus> {
-    const res = await fetch(`${API_BASE}/api/status`);
+    const res = await fetch(`${API_BASE}/api/status`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch AI status');
     return res.json();
 }
 
 export async function fetchExamInfo(): Promise<ExamInfo> {
-    const res = await fetch(`${API_BASE}/api/exams`);
+    const res = await fetch(`${API_BASE}/api/exams`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch exam info');
     return res.json();
 }
@@ -79,7 +79,7 @@ export async function startExam(topic?: string): Promise<Question[]> {
     const url = topic
         ? `${API_BASE}/api/exam/start?topic=${encodeURIComponent(topic)}`
         : `${API_BASE}/api/exam/start`;
-    const res = await fetch(url);
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to start exam');
     return res.json();
 }
@@ -89,6 +89,7 @@ export async function submitExam(answers: Answer[]): Promise<{ result: ExamResul
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers }),
+        cache: 'no-store'
     });
     if (!res.ok) throw new Error('Failed to submit exam');
     return res.json();
@@ -98,20 +99,21 @@ export async function fetchAdaptiveExam(resultId?: number): Promise<AdaptiveResp
     const res = await fetch(`${API_BASE}/api/exam/adaptive`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resultId })
+        body: JSON.stringify({ resultId }),
+        cache: 'no-store'
     });
     if (!res.ok) throw new Error('Failed to fetch adaptive exam');
     return res.json();
 }
 
 export async function fetchHistory(): Promise<ExamResult[]> {
-    const res = await fetch(`${API_BASE}/api/history`);
+    const res = await fetch(`${API_BASE}/api/history`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch history');
     return res.json();
 }
 
 export async function fetchHistoryItem(id: number): Promise<ExamResult> {
-    const res = await fetch(`${API_BASE}/api/history/${id}`);
+    const res = await fetch(`${API_BASE}/api/history/${id}`, { cache: 'no-store' });
     if (!res.ok) {
         throw new Error('Failed to fetch history item');
     }
@@ -119,6 +121,6 @@ export async function fetchHistoryItem(id: number): Promise<ExamResult> {
 }
 
 export async function clearHistory(): Promise<void> {
-    const res = await fetch(`${API_BASE}/api/history`, { method: 'DELETE' });
+    const res = await fetch(`${API_BASE}/api/history`, { method: 'DELETE', cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to clear history');
 }
