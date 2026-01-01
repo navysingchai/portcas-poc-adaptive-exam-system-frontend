@@ -95,11 +95,11 @@ export async function submitExam(answers: Answer[]): Promise<{ result: ExamResul
     return res.json();
 }
 
-export async function fetchAdaptiveExam(resultId?: number): Promise<AdaptiveResponse> {
+export async function fetchAdaptiveExam(resultId?: number, usedQuestionIds?: number[]): Promise<AdaptiveResponse> {
     const res = await fetch(`${API_BASE}/api/exam/adaptive`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resultId }),
+        body: JSON.stringify({ resultId, usedQuestionIds }),
         cache: 'no-store'
     });
     if (!res.ok) throw new Error('Failed to fetch adaptive exam');

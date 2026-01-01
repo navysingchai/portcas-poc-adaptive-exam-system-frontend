@@ -10,6 +10,7 @@ export interface ExamState {
     topic: string | null;
     round: number;
     lastResult: ExamResult | null;
+    usedQuestionIds: number[];  // Track all questions done across rounds
 }
 
 const defaultState: ExamState = {
@@ -18,6 +19,7 @@ const defaultState: ExamState = {
     topic: null,
     round: 1,
     lastResult: null,
+    usedQuestionIds: [],
 };
 
 export function getExamState(): ExamState {

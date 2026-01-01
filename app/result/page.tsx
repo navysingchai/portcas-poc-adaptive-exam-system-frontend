@@ -30,13 +30,18 @@ export default function ResultPage() {
 
         setLoading(true);
         try {
-            const response = await fetchAdaptiveExam();
+            // Bug Fix #3: รวบรวม questionIds ที่เคยทำไปแล้วทุกรอบ
+            const currentUsedIds = state.usedQuestionIds || [];
+            const newUsedIds = [...currentUsedIds, ...state.questions.map(q => q.id)];
+
+            const response = await fetchAdaptiveExam(state.lastResult?.id, newUsedIds);
             const questions = response.questions;
             setExamState({
                 questions,
                 answers: questions.map((q) => ({ questionId: q.id, answer: '', confidence: 0 })),
                 round: state.round + 1,
                 lastResult: null,
+                usedQuestionIds: newUsedIds,  // บันทึก IDs ที่ใช้ไปแล้ว
             });
             await fetchAIStatus().then(setAiStatus);
             router.push('/exam');
@@ -79,6 +84,25 @@ export default function ResultPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Bug Fix #2: AI Summary - แสดงทันทีหลังส่งคำตอบ */}
+            {lastResult.summary && (
+                <div className="mb-6 p-5 rounded-lg border border-accent/30 bg-accent/5 shadow-sm">
+                    <h3 className="font-semibold mb-3 text-accent text-lg">สรุปผลการวิเคราะห์</h3>
+                    <p className="text-dark leading-relaxed mb-4">{lastResult.summary}</p>
+
+                    {lastResult.nextSteps && lastResult.nextSteps.length > 0 && (
+                        <div>
+                            <h4 className="font-medium text-primary mb-2">สิ่งที่ควรพัฒนา:</h4>
+                            <ul className="list-disc list-inside space-y-1 text-dark/80">
+                                {lastResult.nextSteps.map((step, idx) => (
+                                    <li key={idx}>{step}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Answer Details */}
             <div

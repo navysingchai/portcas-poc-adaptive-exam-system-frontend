@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import PageLayout from '@/components/PageLayout';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -8,10 +8,35 @@ import { submitExam } from '@/lib/api';
 import { getExamState, setExamState, ExamState } from '@/lib/store';
 import { Question, Answer } from '@/lib/api';
 
+// Utility function to shuffle an array (Fisher-Yates)
+function shuffleArray<T>(array: T[]): T[] {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
+// Randomize questions and their MCQ choices
+function randomizeExam(questions: Question[]): Question[] {
+    // Shuffle question order
+    const shuffledQuestions = shuffleArray(questions);
+
+    // Shuffle choices for each MCQ question
+    return shuffledQuestions.map(q => ({
+        ...q,
+        choices: q.choices ? shuffleArray(q.choices) : q.choices,
+    }));
+}
+
 export default function ExamPage() {
     const router = useRouter();
     const [state, setState] = useState<ExamState | null>(null);
     const [submitting, setSubmitting] = useState(false);
+
+    // Store randomized questions separately to avoid re-shuffling on re-render
+    const [randomizedQuestions, setRandomizedQuestions] = useState<Question[]>([]);
 
     useEffect(() => {
         const examState = getExamState();
@@ -20,6 +45,9 @@ export default function ExamPage() {
             return;
         }
         setState(examState);
+
+        // Randomize once when loading the exam
+        setRandomizedQuestions(randomizeExam(examState.questions));
     }, [router]);
 
     const handleAnswerChange = (qId: number, field: 'answer' | 'confidence', value: string | number) => {
@@ -49,8 +77,9 @@ export default function ExamPage() {
     };
 
     if (!state) return <LoadingSpinner />;
+    if (randomizedQuestions.length === 0) return <LoadingSpinner />;
 
-    const { questions, answers, topic, round } = state;
+    const { answers, topic, round } = state;
 
     return (
         <PageLayout
@@ -67,9 +96,9 @@ export default function ExamPage() {
                 </span>
             </div>
 
-            {/* Questions */}
+            {/* Questions - ใช้ randomizedQuestions สำหรับการแสดงผล */}
             <div className="space-y-6">
-                {questions.map((q: Question, idx: number) => {
+                {randomizedQuestions.map((q: Question, idx: number) => {
                     const currentAns = answers.find((a: Answer) => a.questionId === q.id);
                     return (
                         <div
@@ -109,8 +138,8 @@ export default function ExamPage() {
                                             <label
                                                 key={c}
                                                 className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-all border ${currentAns?.answer === c
-                                                        ? 'border-accent bg-accent/5 text-dark font-medium shadow-sm'
-                                                        : 'border-gray-200 bg-gray-50 text-dark hover:bg-gray-100'
+                                                    ? 'border-accent bg-accent/5 text-dark font-medium shadow-sm'
+                                                    : 'border-gray-200 bg-gray-50 text-dark hover:bg-gray-100'
                                                     }`}
                                             >
                                                 <input

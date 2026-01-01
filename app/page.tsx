@@ -45,6 +45,7 @@ export default function HomePage() {
         topic: topic || null,
         round: 1,
         lastResult: null,
+        usedQuestionIds: [],  // เริ่มต้นใหม่
       });
       router.push('/exam');
     } catch (err) {
