@@ -82,15 +82,6 @@ export default function HomePage() {
           ))}
         </div>
 
-        <button
-          onClick={() => handleStartExam()}
-          disabled={starting}
-          className="w-full py-4 rounded-xl font-bold text-lg shadow-md transition-all
-                     disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:-translate-y-0.5 bg-accent text-dark"
-        >
-          {starting ? 'กำลังโหลด...' : 'สุ่มทุกหัวข้อ'}
-        </button>
-
         <a
           href="/history"
           className="block w-full text-center py-3 rounded-xl border-2 transition-all font-semibold hover:bg-primary hover:text-light border-primary text-primary"
